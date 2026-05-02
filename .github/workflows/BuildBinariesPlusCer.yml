@@ -1,4 +1,4 @@
-name: Build Binaries Plus Certificate
+name: Build Binaries Plus Cer
 on:
   workflow_dispatch:
   push:
@@ -21,20 +21,11 @@ jobs:
     - uses: microsoft/setup-msbuild@v3
     - name: Clear local NuGet cache (workaround for failed restores on windows-latest)
       run: dotnet nuget locals all --clear
-    - name: Create self-signed certificate
+    - name: Import certificate from Secrets
       shell: pwsh
       run: |
-        $cert = New-SelfSignedCertificate `
-          -Type Custom `
-          -Subject "CN=NanaZip Self-Signed" `
-          -KeyUsage DigitalSignature `
-          -FriendlyName "NanaZip" `
-          -CertStoreLocation "Cert:\CurrentUser\My" `
-          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-        $pwd = ConvertTo-SecureString -String "SelfSignedCert123" -Force -AsPlainText
-        Export-PfxCertificate -cert $cert -FilePath "$env:GITHUB_WORKSPACE\SelfSigned.pfx" -Password $pwd
-        Export-Certificate -cert $cert -FilePath "$env:GITHUB_WORKSPACE\SelfSigned.cer"
-        echo "CERT_THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+        $bytes = [Convert]::FromBase64String("${{ secrets.CERT_PFX_BASE64 }}")
+        [IO.File]::WriteAllBytes("$env:GITHUB_WORKSPACE\SelfSigned.pfx", $bytes)
     - name: Build
       run: MSBuild -binaryLogger:Output\BuildAllTargets.binlog -m BuildAllTargets.proj
     - name: Sign MSIX Bundle
@@ -51,7 +42,7 @@ jobs:
           Write-Host "Signing: $($file.FullName)"
           & $signtool sign /fd SHA256 /a `
             /f "$env:GITHUB_WORKSPACE\SelfSigned.pfx" `
-            /p "SelfSignedCert123" `
+            /p "${{ secrets.CERT_PASSWORD }}" `
             $file.FullName
         }
     - name: Upload MSIX Bundle
@@ -59,11 +50,6 @@ jobs:
       with:
         name: NanaZip_Mainline_ApplicationPackages
         path: Output/Binaries/AppPackages
-    - name: Upload Certificate
-      uses: actions/upload-artifact@v7
-      with:
-        name: NanaZip_Mainline_Certificate
-        path: SelfSigned.cer
     - name: Upload Extension Package Installer
       uses: actions/upload-artifact@v7
       with:
