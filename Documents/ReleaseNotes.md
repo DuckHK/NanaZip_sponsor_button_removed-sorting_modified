@@ -3,6 +3,19 @@
 For preview versions, please read 
 [NanaZip Preview Release Notes](ReleaseNotesPreview.md).
 
+**NanaZip 6.0 Update 6 (6.0.1701.0)**
+
+- Synchronize 7-Zip mainline implementations to 26.01. (Except the NanaZip File
+  Manager.) (Thanks to Igor Pavlov.)
+
+**NanaZip 6.0 Update 5 (6.0.1698.0)**
+
+- Fix several issues for codecs. (Contributed by dinhngtu and JarLob.)
+- Fix the Sponsor Dialog is unavailable issue.
+- Update the installation instructions document. (Suggested by gentrydeng.)
+- Update the system requirements document.
+- Update Mile.Windows.Internal to 1.0.3586.
+
 **NanaZip 6.0 Update 3 (6.0.1691.0)**
 
 - Fix mitigations failing in some cases (Suggested by ahmed605. Contributed by
